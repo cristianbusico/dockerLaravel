@@ -1,42 +1,36 @@
-#docker compose up -d
 networks:
   cms-net:
     driver: bridge
 
 services:
-  laravel.localhost:
-    build:
-      context: .
-      dockerfile: .docker/laravel/Dockerfile
-    ports:
-      - "9000:80"
-    volumes:
-#      - .docker/laravel/php/php.ini-development:/usr/local/etc/php/
-      - ./laravel-pds:/var/www/html
-#      - /var/www/html/storage # Storage for Laravel's storage folder
-#      - /var/www/html/bootstrap/cache # Storage for Laravel's cache
-    environment:
-      - CI_ENV=development
-      - API_URL=http://console.poliziadistato.localhost:8181
-    networks:
-      - cms-net
-    mem_limit: "2G"
-    cpus: "1"
-
   console.poliziadistato.localhost:
     platform: linux/amd64
     image: httpd:2.4.55
     ports:
       - "80:80"
       - "8181:80"
-#      - "9000:9000"
     environment:
       - CI_ENV=development
     networks:
-      - cms-net
+      cms-net:
+        aliases:
+          - console.poliziadistato.local
+          - console.poliziadistato.localhost
+          - www.poliziadistato.localhost
+          - poliziadistato.localhost
+          - questure.poliziadistato.localhost
+          - doppiavela.poliziadistato.localhost
+          - dv.poliziadistato.localhost
+          - poliziamoderna.poliziadistato.localhost
     volumes:
       - .docker/httpd/conf:/usr/local/apache2/conf
-      - .:/var/www/html
+      - ./statics:/var/www/statics
+      - ./WWW:/var/www/html/WWW
+      - ./WWW_DOPPIAVELA:/var/www/html/WWW_DOPPIAVELA
+      - ./WWW_DOPPIAVELA_INTERNET:/var/www/html/WWW_DOPPIAVELA_INTERNET
+      - ./WWW_POLIZIADISTATO:/var/www/html/WWW_POLIZIADISTATO
+      - ./WWW_POLIZIAMODERNA:/var/www/html/WWW_POLIZIAMODERNA
+      - ./WWW_QUESTURE:/var/www/html/WWW_QUESTURE
       - ./mod_cache-lock:/usr/local/apache2/mod_cache-lock
       - ./mod_cache_disk:/usr/local/apache2/mod_cache_disk
 
@@ -49,10 +43,17 @@ services:
     volumes:
       - .:/var/www/html
       - ./statics:/var/www/statics
+      - ./WWW:/var/www/html/WWW
+      - ./WWW_DOPPIAVELA:/var/www/html/WWW_DOPPIAVELA
+      - ./WWW_DOPPIAVELA_INTERNET:/var/www/html/WWW_DOPPIAVELA_INTERNET
+      - ./WWW_POLIZIADISTATO:/var/www/html/WWW_POLIZIADISTATO
+      - ./WWW_POLIZIAMODERNA:/var/www/html/WWW_POLIZIAMODERNA
+      - ./WWW_QUESTURE:/var/www/html/WWW_QUESTURE
       - .docker/php/php.ini:/usr/local/etc/php/php.ini
       - .docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
       - .docker/php/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
+      - console.poliziadistato.localhost
       - redis
 
   mysql:
@@ -71,7 +72,7 @@ services:
       - TZ=Europe/Rome
     command: >
       bash -c "
-      
+
       cd /var/lib/mysql
       && find . -type f -name '._*' -delete
       && cp /etc/mysql/tmp/*.cnf /etc/mysql/conf.d/
@@ -95,52 +96,6 @@ services:
       redis-server /usr/local/etc/redis/redis.conf
       "
 
-  console.poliziadistato.integration:
-    platform: linux/amd64
-    image: httpd:2.4.55
-    ports:
-      - "81:80"
-    environment:
-      - CI_ENV=integration
-    networks:
-      cms-net:
-        #servono per accedere agli host dai container di test (jest, cypress) durante la CI
-        aliases:
-          - www.poliziadistato.localhost
-          - poliziadistato.localhost
-          - questure.poliziadistato.localhost
-          - doppiavela.poliziadistato.localhost
-          - dv.poliziadistato.localhost
-          - poliziamoderna.poliziadistato.localhost
-          - console.poliziadistato.localhost
-    volumes:
-      - .docker/httpd/conf:/usr/local/apache2/conf
-      - .:/var/www/html
-      - ./mod_cache-lock:/usr/local/apache2/mod_cache-lock
-      - ./mod_cache_disk:/usr/local/apache2/mod_cache_disk
-
-  php.integration:
-    platform: linux/amd64
-    build:
-      context: .
-      dockerfile: .docker/php/Dockerfile
-    network_mode: "service:console.poliziadistato.integration"
-    volumes:
-      - .:/var/www/html
-      - ./statics:/var/www/statics
-      - .docker/php/php.ini:/usr/local/etc/php/php.ini
-      - .docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
-      - .docker/php/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-    depends_on:
-      - console.poliziadistato.integration
-    command: >
-      bash -c "
-      chmod -R o+rw /var/www/html/statics;
-      chmod -R o+rw /var/www/statics;
-      chmod -R o+rw /tmp;
-      php-fpm
-      "
-
   mysql.integration:
     platform: linux/amd64
     image: mysql:8.0.34
@@ -153,7 +108,7 @@ services:
       - TZ=Europe/Rome
     command: >
       bash -c "
-      
+
       cd /var/lib/mysql
       && rm -rf /var/lib/mysql/*
       && cp /etc/mysql/tmp/*.cnf /etc/mysql/conf.d/
@@ -163,3 +118,38 @@ services:
       && ln -snf /usr/share/zoneinfo/$$TZ /etc/localtime
       && /entrypoint.sh mysqld
       "
+
+  console.poliziadistato.integration:
+    platform: linux/amd64
+    image: httpd:2.4.55
+    ports:
+      - "81:80"
+    environment:
+      - CI_ENV=integration
+    networks:
+      - cms-net
+    volumes:
+      - .docker/httpd-integration/conf:/usr/local/apache2/conf
+      - ./laravel-pds:/var/www/html/laravel-pds
+      - ./laravel-qst:/var/www/html/laravel-qst
+      - ./laravel-pzm:/var/www/html/laravel-pzm
+      - ./mod_cache-lock:/usr/local/apache2/mod_cache-lock
+      - ./mod_cache_disk:/usr/local/apache2/mod_cache_disk
+
+  php8.3.integration:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: .docker/php8.3/Dockerfile
+    network_mode: "service:console.poliziadistato.integration"
+    volumes:
+      - ./laravel-pds:/var/www/html/laravel-pds
+      - ./laravel-qst:/var/www/html/laravel-qst
+      - ./laravel-pzm:/var/www/html/laravel-pzm
+      - ./statics:/var/www/statics
+      - .docker/php8.3/php.ini:/usr/local/etc/php/php.ini
+      - .docker/php8.3/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - .docker/php8.3/www.conf:/usr/local/etc/php-fpm.d/www.conf
+      - .docker/php8.3/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    depends_on:
+      - console.poliziadistato.integration

@@ -407,6 +407,7 @@ CREATE TABLE `resources` (
                              FULLTEXT KEY `idx_resources_fulltext` (`filename`,`caption`,`description`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 DROP TABLE IF EXISTS `resources_rassegna`;
 CREATE TABLE `resources_rassegna` (
                                       `id` bigint NOT NULL AUTO_INCREMENT,

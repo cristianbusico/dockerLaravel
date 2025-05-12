@@ -7,7 +7,3 @@ services:
       - .docker/mysql/entrypoint.sh:/usr/local/bin/entrypoint.sh
       - ./logs-integration:/var/log/mysql
 
-  php.integration:
-    environment:
-      XDEBUG_CONFIG: "client_host=192.168.1.108"
-      PHP_IDE_CONFIG: "serverName=console.poliziadistato.localhost"
