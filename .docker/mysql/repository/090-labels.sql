@@ -1,0 +1,2 @@
+INSERT INTO cms2015.labels (id, name, id_site, position, COD_EXT) VALUES (1, 'testatina 1', 1, 5, null);
+INSERT INTO cms2015.labels (id, name, id_site, position, COD_EXT) VALUES (3, 'testatina 2', 1, 1, null);
