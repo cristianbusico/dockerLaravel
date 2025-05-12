@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+source ./env/system.env
+node_version=$(node -v)
+
+if [ -z "$1" ]; then
+    echo "Error: Folder name required"
+    exit 1
+fi
+
+if [[ "$node_version" == "v${SYSTEM_NODE_VERSION}" ]]; then
+    cd WWW/"$1" || { echo "Check the name of the folder $1 have the gulpfile.js is located."; exit 1; }
+
+    npm ci
+    npx bower install
+
+    echo "Installation completed successfully"
+else
+    echo "Incorrect Node version. Please run the command below and relaunch:"
+    echo "nvm use ${SYSTEM_NODE_VERSION}"
+fi
+

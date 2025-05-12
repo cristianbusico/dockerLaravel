@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+source ./env/system.env
+
+sudo usermod -aG docker "${SYSTEM_USER}" 
+
+echo "Usermode applay at ${SYSTEM_USER} user"
+newgrp docker
+
+echo "Newgrep apply"

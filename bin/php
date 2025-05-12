@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+source ./env/system.env
+
+FOLDER=${1:-"${FOLDER}"}
+shift
+COMMAND=${1:-"${COMMAND}"}
+CONTAINER_NAME="${CONTAINER_NAME_LARAVEL}"
+
+if [[ "$FOLDER" == WWW* ]]; then
+  CONTAINER_NAME=$CONTAINER_NAME_CONSOLE
+elif [[ "$FOLDER" =~ ^laravel-* ]]; then
+  CONTAINER_NAME=$CONTAINER_NAME_LARAVEL
+else
+  echo "Error: Directory pattern not supported."
+  exit 1
+fi
+
+if ! docker ps --filter "name=$CONTAINER_NAME" --filter "status=running" | grep -q "$CONTAINER_NAME"; then
+    echo "The container '$CONTAINER_NAME' is not running."
+    exit 1
+fi
+
+if [ $# -eq 0 ]; then
+    docker exec -it "$CONTAINER_NAME" bash
+else
+    WORKDIR="/var/www/html/$FOLDER"
+    docker exec -w "$WORKDIR" -it "$CONTAINER_NAME" "$@"
+fi

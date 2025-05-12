@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+source ./env/system.env
+
+sudo chown -R "${SYSTEM_USER}":"${SYSTEM_USER}" "${SYSTEM_PROJECT_FOLDER}"
+echo "Perms ${SYSTEM_USER} applay on new folder"
+
+find "${SYSTEM_PROJECT_FOLDER}" -type f -name '*:Zone.Identifier' -exec rm -f {} \;
+find "${SYSTEM_PROJECT_FOLDER}" -type f -name '*:6E53BFF5-0001-412b-8407-E3AEDE763511' -exec rm -f {} \;
+find "${SYSTEM_PROJECT_FOLDER}" -type f -name '*:Avecto.Zone.Identifier' -exec rm -f {} \;
+find "${SYSTEM_PROJECT_FOLDER}" -type f -name '*:PG$Secure' -exec rm -f {} \;
+echo "Find and remove files whit wrong extension "
